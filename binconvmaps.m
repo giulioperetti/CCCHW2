@@ -1,19 +1,19 @@
 function [S,O,N] = binconvmaps(n)
-%BINCONVENC Build a binary convolution encoder from the generator polynomials in binary vector form.
+%BINCONVENC Build maps of a binary convolution encoder from the generator polynomials in binary vector form.
 %[S,O,N] = binconvec(n) 
 % S(s,u) is the state update function matrix
 % O(s,u) is the output function matrix
 % N(s) is the neghbour vector
     
-    n = gf(n);
     nu = length(n)-1; % memory of the system
     %s = gf(zeros(1,nu)); % state of the finite state machine
     
-    O = gf(zeros(2^nu,2)); % initialization of the output map
+    O = zeros(2^nu,2); % initialization of the output map
     for i=1:2^nu
-        O(i,1) = n*gf([0 de2bi(i-1,nu,'left-msb')]).';
-        O(i,2) = n*gf([1 de2bi(i-1,nu,'left-msb')]).';
+        O(i,1) = n*[0 de2bi(i-1,nu,'left-msb')].';
+        O(i,2) = n*[1 de2bi(i-1,nu,'left-msb')].';
     end
+    O = mod(O,2);
     
     S = zeros(2^nu,2); % initialization of the state update map
     for i=1:2^nu
