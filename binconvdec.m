@@ -13,10 +13,9 @@ function [u] = binconvdec(r,S,O,N)
     C(1) = 0;
     
     U = zeros(2^nu,mu); % survivors matrix
+    Uaux = zeros(2^nu,5*nu); % auxiliary matrix
     
-    for i=1:mu
-        
-        Uaux = U;
+    for i=1:mu    
         
         for j=1:2^nu
             
@@ -37,19 +36,18 @@ function [u] = binconvdec(r,S,O,N)
             [mcost ind] = max(temp);
             
             % path and cost update
-            
-            Uaux(j,1:i) = U(pred(ind)+1,1:i);
-            Uaux(j,i) = trans(ind); 
             Caux(j) = mcost;
-                        
+            Uaux(j,1:min(i,5*nu)) = U(pred(ind)+1,max(i-5*nu+1,1):i);
+            Uaux(j,min(i,5*nu)) = trans(ind);
+
         end
         
         C = Caux - max(Caux);
-        U = Uaux;
+        U(:,max(i-5*nu+1,1):i) = Uaux(:,1:min(i,5*nu));
+        
     end
     
-    winner = find(C == max(C));
-    u = U(winner,:);
+    u = U(find(C == max(C)),:);
     
 end
 
