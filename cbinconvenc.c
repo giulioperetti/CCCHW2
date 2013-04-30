@@ -16,8 +16,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *u_in_m, *S_in_m, *O_in_m, *y_out_m;
     const mwSize *u_dims, *S_dims, *O_dims, *y_dims;
     double *u, *S, *O, *y;
-    int nu, mu, dimx, dimy, numdims;
-    int i,j;
+    int mu, numdims;
+    int i;
     
     // associate inputs
     u_in_m = mxDuplicateArray(prhs[0]);
@@ -38,45 +38,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    
     
     mu = (int)u_dims[1]; // input length
-    nu = ceil(log((int)S_dims[0])/log(2)); // system memory
+        
+    // associate outputs
+    y_out_m = plhs[0] = mxCreateDoubleMatrix(u_dims[0],u_dims[1],mxREAL);
     
-    
-   // if ((int)y_dims[1] != mu)
-            //mexErrMsgTxt("Dimensions of u and y mismatch");
-    
-//     for (i=1;i<=mu;i++)
-//         y(:,i) = de2bi(O(s+1,u(i)+1),2,'left-msb').';
-//         s = S(s+1,u(i)+1);
-//     end  
-                
-     dimy = (int)u_dims[0]; dimx = (int)u_dims[1];
-//     
-//     
-//     
-//     // associate outputs
-//     S_out_m = plhs[0] = mxCreateDoubleMatrix(dimy,dimx,mxREAL);
-//     
     // associate pointers
     u = mxGetPr(u_in_m);
     S = mxGetPr(S_in_m);
     O = mxGetPr(O_in_m);
     y = mxGetPr(y_out_m);
     
-    int s = 0;
-     
-    for(i=0;i<dimy;i++)
-    {
-        
-            
-            mexPrintf("y[%d][%d] = %f\n",j,i,O[s*2+i]);
-            mexPrintf("y[%d][%d] = %f\n",j,i,O[s*2+i]);
-          
-            s = S[s*2+i];
-            //S[i*dimy+j] = n[i*dimy+j];
+    double s = 0;
+    
+    for(i=0;i<mu;i++)
+    {       
+        y[i] = O[(int)s+(int)u[i]*O_dims[0]];    
+        s = S[(int)s+(int)u[i]*S_dims[0]];
        
     }
-    
-   // mexPrintf("mu, (int)y_dims[1] = %d, %d",mu,(int)y_dims[1]);
     
     return;
  }
