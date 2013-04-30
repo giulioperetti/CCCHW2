@@ -15,9 +15,9 @@ function [S,O,N] = binconvmaps(n1,n2)
         O(i,1) = bi2de(mod([n1*[0 de2bi(i-1,nu,'left-msb')].' 
             n2*[0 de2bi(i-1,nu,'left-msb')].'].',2),'left-msb');
         O(i,2) = bi2de(mod([n1*[1 de2bi(i-1,nu,'left-msb')].' 
-            n2*[0 de2bi(i-1,nu,'left-msb')].'].',2),'left-msb');
+            n2*[1 de2bi(i-1,nu,'left-msb')].'].',2),'left-msb');
     end
-    O = mod(O,2);
+    
     
     S = zeros(2^nu,2); % initialization of the state update map
     for i=1:2^nu

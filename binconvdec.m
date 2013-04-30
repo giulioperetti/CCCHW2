@@ -2,7 +2,7 @@ function [u] = binconvdec(r,S,O,N)
 %BINCONVDEC Viterbi decoder
 %   Detailed explanation goes here
 
-    mu = length(r);
+    mu = length(r(1,:));
     nu = log(length(S(:,1)))/log(2);
     
     C = zeros(2^nu,1); % path cost vector
@@ -29,8 +29,8 @@ function [u] = binconvdec(r,S,O,N)
                 find(S(pred(2)+1,:)==j-1)-1];
             
             % cost function
-            temp = [C(pred(1)+1) + r(i)*pamap(O(pred(1)+1,trans(1)+1)) 
-                C(pred(2)+1) + r(i)*pamap(O(pred(2)+1,trans(2)+1))];
+            temp = [C(pred(1)+1) + r(:,i).'*pamap(de2bi(O(pred(1)+1,trans(1)+1),2,'left-msb')).' 
+                C(pred(2)+1) + r(:,i).'*pamap(de2bi(O(pred(2)+1,trans(2)+1),2,'left-msb')).'];
             
             % select the max value
             [mcost ind] = max(temp);
