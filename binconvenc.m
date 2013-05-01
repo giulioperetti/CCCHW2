@@ -4,7 +4,6 @@ function [y] = binconvenc(u,S,O)
 %   [y] = binconvenc(u,S,O)
     
     mu = length(u);
-    %nu = log(length(S(:,1)))/log(2);
     y = zeros(2,mu);
     s = 0;
     

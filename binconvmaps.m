@@ -29,7 +29,7 @@ function [S,O,N] = binconvmaps(n1,n2)
     N = zeros(2^nu,2); % initialization of the state update map
     for i=1:2^nu
         [temp,temp2] = find(S==i-1);
-        N(i,:) = bi2de(de2bi(temp-1,2,'left-msb'),'left-msb');   
+        N(i,:) = bi2de(de2bi(temp-1,nu,'left-msb'),'left-msb');   
     end
 
 

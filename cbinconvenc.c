@@ -15,7 +15,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // declare variables
     mxArray *u_in_m, *S_in_m, *O_in_m, *y_out_m;
     const mwSize *u_dims, *S_dims, *O_dims, *y_dims;
-    double *u, *S, *O, *y;
+    double *u, *S, *O, *y, yd;
     int mu, numdims;
     int i;
     
@@ -33,14 +33,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     
     u_dims = mxGetDimensions(prhs[0]);
+    if (u_dims[0] != 1)
+        mexErrMsgTxt("The first input argument must have only one row");
     S_dims = mxGetDimensions(prhs[1]);
+    if (S_dims[1] != 2)
+        mexErrMsgTxt("The second input argument must have 2 columns");
     O_dims = mxGetDimensions(prhs[2]);
-   
+    if (O_dims[1] != 2)
+        mexErrMsgTxt("The third input argument must have 2 columns");
     
-    mu = (int)u_dims[1]; // input length
+    mu = (int)u_dims[1];
         
     // associate outputs
-    y_out_m = plhs[0] = mxCreateDoubleMatrix(u_dims[0],u_dims[1],mxREAL);
+    y_out_m = plhs[0] = mxCreateDoubleMatrix(2,mu,mxREAL);
     
     // associate pointers
     u = mxGetPr(u_in_m);
@@ -48,13 +53,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     O = mxGetPr(O_in_m);
     y = mxGetPr(y_out_m);
     
+    
+    // code generation
     double s = 0;
     
     for(i=0;i<mu;i++)
     {       
-        y[i] = O[(int)s+(int)u[i]*O_dims[0]];    
-        s = S[(int)s+(int)u[i]*S_dims[0]];
-       
+        // decimal representation of y[i]
+        yd = O[(int)s+(int)u[i]*O_dims[0]];
+        
+        // state updating
+        s = S[(int)s+(int)u[i]*S_dims[0]]; 
+        
+        // decimal to binary conversion
+        y[2*i] = floor(yd / (double)2);
+        y[2*i+1] = (double)((int)yd % 2);
     }
     
     return;
