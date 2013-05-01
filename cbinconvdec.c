@@ -4,6 +4,8 @@
 #include <matrix.h>
 #include <mex.h>
 
+int pamap(int x);
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     // input output arguments check
@@ -16,7 +18,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *r_in_m, *S_in_m, *O_in_m, *N_in_m, *u_hat_out_m;
     const mwSize *r_dims, *S_dims, *O_dims, *N_dims, *u_hat_dims;
     double *r, *S, *O, *N, *u_hat, *C, *C_aux, *U, *U_aux, s;
-    int *p, *t, mu, nu, i, j;
+    int *p, *t, *m, mu, nu, i, j;
     
     // associate inputs
     r_in_m = mxDuplicateArray(prhs[0]);
@@ -72,7 +74,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     C[0] = 0;
      
     // survivors matrix initialization
-    
     U = mxCalloc(S_dims[0]*mu, sizeof(double));
     U_aux = mxCalloc(S_dims[0]*(5*nu), sizeof(double));
     
@@ -80,21 +81,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     s = 0;
     p = mxCalloc(2,sizeof(int));
     t = mxCalloc(2,sizeof(int));
+    m = mxCalloc(2,sizeof(int));
     
     // Viterbi algorithm
-    
     for (i=0;i<mu;i++)
     {
         for (j=0;j<S_dims[0];j++)
-        {
-            // analyzing state j
-           
+        {  
             // predecessors
             p[0] = (int)N[j];
             p[1] = (int)N[j+S_dims[0]];
             
-            // transitions
-            
+            // transitions    
             if (S[p[0]] == j)
                 t[0] = 0;
             else t[0] = 1;
@@ -102,11 +100,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 t[1] = 0;
             else t[1] = 1;
             
-            mexPrintf("State %d: p = [%d][%d]",j,p[0],p[1]);
-//             % transitions from predecessors
-//             trans = [find(S(pred(1)+1,:)==j-1)-1 
-//                 find(S(pred(2)+1,:)==j-1)-1];
-//             
+            // paths metric
+            m[0] = C[p[0]] + r[i*2]*pamap(floor(O[j+t[0]*O_dims[0]]/2))
+                           + r[i*2+1]*pamap((int)O[j+t[0]*O_dims[0]]%2);
+            m[1] = C[p[1]] + r[i*2]*pamap(floor(O[j+t[1]*O_dims[0]]/2))
+                           + r[i*2+1]*pamap((int)O[j+t[1]*O_dims[0]]%2);
+
+            mexPrintf("m[0] = %d, m[1] = %d\n",m[0],m[1]);
 //             % cost function
 //             temp = [C(pred(1)+1) + r(:,i).'*pamap(de2bi(O(pred(1)+1,trans(1)+1),2,'left-msb')).' 
 //                 C(pred(2)+1) + r(:,i).'*pamap(de2bi(O(pred(2)+1,trans(2)+1),2,'left-msb')).'];
@@ -121,13 +121,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
     
-//     for(i=0;i<mu;i++)
-//     {       
-//         yd = O[(int)s+(int)u[i]*O_dims[0]]; // yd is in {0,1,2,3}  
-//         s = S[(int)s+(int)u[i]*S_dims[0]]; // state updating
-//         y[2*i] = floor(yd / (double)2);
-//         y[2*i+1] = (double)((int)yd % 2);
-//     }
     
     return;
  }
+
+int pamap(int x)
+{
+    return 2*x-1;
+}
