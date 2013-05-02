@@ -115,11 +115,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             m[0] = C[p[0]] + r[i*2]*pamap(floor(O[p[0]+t[0]*O_dims[0]]/2))
                            + r[i*2+1]*pamap((int)O[p[0]+t[0]*O_dims[0]]%2);
             
-            mexPrintf(" C[p[0]] = %d",(int)C[p[0]]);
-            mexPrintf(" r[i*2] = %d",(int)r[i*2]);
-            mexPrintf(" r[i*2+1] = %d",(int)r[i*2+1]);
-            mexPrintf(" PAM(0) = %d",(int)pamap(floor(O[p[0]+t[0]*O_dims[0]]/2)));
-            
+            mexPrintf("   m[0] = %d + %d*%d + %d*%d",C[p[0]],r[i*2],pamap(floor(O[p[0]+t[0]*O_dims[0]]/2)),r[i*2+1],(int)pamap((int)O[p[0]+t[0]*O_dims[0]]%2));
+           
             m[1] = C[p[1]] + r[i*2]*pamap(floor(O[p[1]+t[1]*O_dims[0]]/2))
                            + r[i*2+1]*pamap((int)O[p[1]+t[1]*O_dims[0]]%2);
             mexPrintf("   Predecessors %d,%d; transitions %d,%d: metrics %d,%d\n",p[0],p[1],t[0],t[1],m[0],m[1]);
@@ -165,6 +162,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             U[S_dims[0]*max(0,i-5*nu)+k] = U_aux[k];
             //mexPrintf("     U[%d] = U_aux[%d] = %f\n",S_dims[0]*max(0,i-5*nu)+k,k,U_aux[k]);
         }
+    
+        stamp(C,4,1);
+        stamp(U,4,3);
 //         C = Caux - max(Caux);
 //         U(:,max(i-5*nu+1,1):i) = Uaux(:,1:min(i,5*nu));
          
@@ -173,10 +173,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     max = 0;
     for (k=1;k<S_dims[0];k++)
     {
-        if (C[k]>C[max]) 
+        if (C[k]<C[max]) 
                 max = k; 
     }
-    
     for (k=0;k<mu;k++)
     {
         u_hat[k] = U[max+k*S_dims[0]];

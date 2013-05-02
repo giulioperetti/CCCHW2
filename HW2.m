@@ -14,8 +14,9 @@ g1 = [1 0 1];
 g2 = [1 1 1];
 
 % input
-mu = 10; 
+mu = 8; 
 u = round(rand(1,mu));
+%u = [1 0 1];
 
 % maps
 [SS,OO,NN] = binconvmaps(g1,g2);
