@@ -14,7 +14,7 @@ g1 = [1 0 1];
 g2 = [1 1 1];
 
 % input
-mu = 17; 
+mu = 10^6; 
 u = round(rand(1,mu));
 %u = [1 0 1];
 
@@ -30,4 +30,6 @@ r = pamap(y);
 
 % viterbi decoding
 uhat = cbinconvdec(r,SS,OO,NN);
+
+errors = sum(u-uhat)
 

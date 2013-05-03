@@ -86,7 +86,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     U = mxCalloc(S_dims[0]*mu, sizeof(double));
     U_aux = mxCalloc(S_dims[0]*(5*nu), sizeof(double));
     
-    stamp(U_aux,4,5*nu);
+//     stamp(U_aux,4,5*nu);
     
     // state and auxiliary variables initialization
     s = 0;
@@ -97,10 +97,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // Viterbi algorithm
     for (i=0;i<mu;i++)
     {
-        mexPrintf("\n~ SYMBOL %d ~\n",i);
+//         mexPrintf("\n~ SYMBOL %d ~\n",i);
         for (j=0;j<S_dims[0];j++)
         {  
-            mexPrintf(" State %d:\n",j);
+//             mexPrintf(" State %d:\n",j);
             // predecessors
             p[0] = (int)N[j];
             p[1] = (int)N[j+S_dims[0]];
@@ -149,7 +149,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             U_aux[j+S_dims[0]*min(i,5*nu-1)] = (double)t[max];
             //mexPrintf("    U_aux[%d+4*%d] = %d\n",j,min(i,5*nu),t[max]);
             
-            stamp(U_aux,4,5*nu);mexPrintf("\n");
+            //stamp(U_aux,4,5*nu);mexPrintf("\n");
             
         }
         
@@ -172,7 +172,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             //mexPrintf("     U[4*%d+%d] = U_aux[%d] = %d\n",max(0,i-5*nu),k,k,(int)U_aux[k]);
         }
 
-        stamp(U,4,mu); mexPrintf("\n");
+        //stamp(U,4,mu); mexPrintf("\n");
     }
     
     max = 0;
