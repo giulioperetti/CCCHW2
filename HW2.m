@@ -14,7 +14,7 @@ g1 = [1 0 1];
 g2 = [1 1 1];
 
 % input
-mu = 15; 
+mu = 17; 
 u = round(rand(1,mu));
 %u = [1 0 1];
 
@@ -29,5 +29,5 @@ y = cbinconvenc(u,SS,OO);
 r = pamap(y);
 
 % viterbi decoding
-uhat = binconvdec(r,SS,OO,NN);
+uhat = cbinconvdec(r,SS,OO,NN);
 
