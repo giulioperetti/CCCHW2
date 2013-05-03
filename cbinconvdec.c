@@ -136,17 +136,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mexPrintf("   C_aux[%d] = m[%d] = %d",j,max,m[max]);
             for (k=0;k<min(i,5*nu);k++)
             {
-                U_aux[j+S_dims[0]*k] = U[p[max]+S_dims[0]*(i-min(i,5*nu)+k)];
                 mexPrintf("    U[%d] -> U_aux[%d] = %f\n",p[max]+S_dims[0]*(i-min(i,5*nu)+k),j+S_dims[0]*k,U_aux[j+S_dims[0]*k]);
+                U_aux[j+S_dims[0]*k] = U[p[max]+S_dims[0]*(i-min(i,5*nu)+k)];
+                
             }
-            U_aux[j+S_dims[0]*min(i,5*nu)] = t[max];
+            U_aux[j+S_dims[0]*min(i,5*nu-1)] = (double)t[max];
             mexPrintf("    t[%d] -> U_aux[%d] = %d\n",max,j+S_dims[0]*min(i,5*nu),t[max]);
             
-            stamp(U_aux,4,3);
+            //stamp(U_aux,4,3);
             
         }
         
-        stamp(C_aux,4,1);
+        //stamp(C_aux,4,1);
         
         // path and cost update
         max = C_aux[0];
@@ -163,7 +164,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         for (k=0;k<S_dims[0]*min(i+1,5*nu);k++)
         {
             U[S_dims[0]*max(0,i-5*nu)+k] = U_aux[k];
-            //mexPrintf("     U[%d] = U_aux[%d] = %f\n",S_dims[0]*max(0,i-5*nu)+k,k,U_aux[k]);
+           // mexPrintf("     U[%d] = U_aux[%d] = %f\n",S_dims[0]*max(0,i-5*nu)+k,k,U_aux[k]);
         }
 //         C = Caux - max(Caux);
 //         U(:,max(i-5*nu+1,1):i) = Uaux(:,1:min(i,5*nu));
@@ -182,14 +183,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         u_hat[k] = U[max+k*S_dims[0]];
     }
     
+    mxFree(m);
+    mxFree(p);
+    mxFree(t);
+    mxFree(C);
+    mxFree(C_aux);
+    mxFree(U);
+    mxFree(U_aux);
     
     return;
  }
-
-
-
-
-
 
 
 
