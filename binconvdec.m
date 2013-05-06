@@ -25,12 +25,11 @@ function [u] = binconvdec(r,S,O,N)
             pred = N(j,:); 
             
             % transitions from predecessors
-            trans = [find(S(pred(1)+1,:)==j-1)-1 
-                find(S(pred(2)+1,:)==j-1)-1];
+            trans = floor((j-1)/2);
             
             % cost function
-            temp = [C(pred(1)+1) + r(:,i).'*pamap(de2bi(O(pred(1)+1,trans(1)+1),2,'left-msb')).' 
-                C(pred(2)+1) + r(:,i).'*pamap(de2bi(O(pred(2)+1,trans(2)+1),2,'left-msb')).'];
+            temp = [C(pred(1)+1) + r(:,i).'*pamap(de2bi(O(pred(1)+1,trans+1),2,'left-msb')).' 
+                C(pred(2)+1) + r(:,i).'*pamap(de2bi(O(pred(2)+1,trans+1),2,'left-msb')).'];
             
             % select the max value
             [mcost ind] = max(temp);
@@ -38,7 +37,7 @@ function [u] = binconvdec(r,S,O,N)
             % path and cost update
             Caux(j) = mcost;
             Uaux(j,1:min(i,5*nu)) = U(pred(ind)+1,max(i-5*nu+1,1):i);
-            Uaux(j,min(i,5*nu)) = trans(ind);
+            Uaux(j,min(i,5*nu)) = trans;
 
         end
         

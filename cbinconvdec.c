@@ -27,7 +27,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *r_in_m, *S_in_m, *O_in_m, *N_in_m, *u_hat_out_m;
     const mwSize *r_dims, *S_dims, *O_dims, *N_dims, *u_hat_dims;
     double *r, *S, *O, *N, *u_hat, *C, *C_aux, *U, *U_aux, s;
-    int *p, *t, *m, max, mu, nu, i, j, k;
+    int *p, *t, *m, max, mu, nu, n_states, i, j, k;
     
     // associate inputs
     r_in_m = mxDuplicateArray(prhs[0]);
@@ -56,7 +56,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt("The fourth input argument must have 2 columns");
     
     mu = (int)r_dims[1]; // input length
-    nu = (int)ceil(log(S_dims[0])/log(2)); // system memory 
+    n_states = S_dims[0]; // number of states
+    nu = (int)ceil(log(n_states)/log(2)); // system memory 
+    
     
     // associate outputs
     u_hat_out_m = plhs[0] = mxCreateDoubleMatrix(1,mu,mxREAL);
@@ -71,10 +73,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* VITERBI DECODING */
       
     // cost vectors initialization
-    C = mxCalloc(S_dims[0], sizeof(double)); 
-    C_aux = mxCalloc(S_dims[0], sizeof(double)); 
+    C = mxCalloc(n_states, sizeof(double)); 
+    C_aux = mxCalloc(n_states, sizeof(double)); 
     
-    for (i=0;i<S_dims[0];i++)
+    for (i=0;i<n_states;i++)
     {
         C[i] = -1000;
         C_aux[i] = 0;
@@ -83,13 +85,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     C[0] = 0;
      
     // survivors matrix initialization
-    U = mxCalloc(S_dims[0]*mu, sizeof(double));
-    U_aux = mxCalloc(S_dims[0]*(5*nu), sizeof(double));
+    U = mxCalloc(n_states*mu, sizeof(double));
+    U_aux = mxCalloc(n_states*(5*nu), sizeof(double));
     
 //     stamp(U_aux,4,5*nu);
     
     // state and auxiliary variables initialization
-    s = 0;
     p = mxCalloc(2,sizeof(int));
     t = mxCalloc(2,sizeof(int));
     m = mxCalloc(2,sizeof(int));
@@ -98,12 +99,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     for (i=0;i<mu;i++)
     {
 //         mexPrintf("\n~ SYMBOL %d ~\n",i);
-        for (j=0;j<S_dims[0];j++)
+        for (j=0;j<n_states;j++)
         {  
 //             mexPrintf(" State %d:\n",j);
             // predecessors
             p[0] = (int)N[j];
-            p[1] = (int)N[j+S_dims[0]];
+            p[1] = (int)N[j+n_states];
             
             // transitions    
             if (S[p[0]] == j)
@@ -138,15 +139,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //             mexPrintf("   C_aux[%d] = m[%d] = %d",j,max,m[max]);
             for (k=0;k<min(i,5*nu);k++)
             {
-//                 mexPrintf("    U[%d] -> U_aux[%d] = %f\n",p[max]+S_dims[0]*(i-min(i,5*nu)+k),j+S_dims[0]*k,U_aux[j+S_dims[0]*k]);
+//                 mexPrintf("    U[%d] -> U_aux[%d] = %f\n",p[max]+n_states*(i-min(i,5*nu)+k),j+n_states*k,U_aux[j+n_states*k]);
                 
-                U_aux[j+S_dims[0]*k] = U[p[max]+S_dims[0]*(i-min(i,5*nu-1)+k)];
+                U_aux[j+n_states*k] = U[p[max]+n_states*(i-min(i,5*nu-1)+k)];
                 
             }
             
             //stamp(U_aux,4,5*nu);mexPrintf("\n");
             
-            U_aux[j+S_dims[0]*min(i,5*nu-1)] = (double)t[max];
+            U_aux[j+n_states*min(i,5*nu-1)] = (double)t[max];
             //mexPrintf("    U_aux[%d+4*%d] = %d\n",j,min(i,5*nu),t[max]);
             
             //stamp(U_aux,4,5*nu);mexPrintf("\n");
@@ -157,18 +158,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         // path and cost update
         max = C_aux[0];
-        for (k=1;k<S_dims[0];k++)
+        for (k=1;k<n_states;k++)
         {
             if (C_aux[k]<max) 
                     max = C_aux[k]; 
         }
-        for (k=0;k<S_dims[0];k++)
+        for (k=0;k<n_states;k++)
         {
             C[k] = C_aux[k] - max;
         }
-        for (k=0;k<S_dims[0]*min(i+1,5*nu);k++)
+        for (k=0;k<n_states*min(i+1,5*nu);k++)
         {
-            U[S_dims[0]*max(0,i-5*nu+1)+k] = U_aux[k];
+            U[n_states*max(0,i-5*nu+1)+k] = U_aux[k];
             //mexPrintf("     U[4*%d+%d] = U_aux[%d] = %d\n",max(0,i-5*nu),k,k,(int)U_aux[k]);
         }
 
@@ -176,7 +177,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     
     max = 0;
-    for (k=1;k<S_dims[0];k++)
+    for (k=1;k<n_states;k++)
     {
         if (C[k]>C[max]) 
                 max = k; 
@@ -184,7 +185,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     for (k=0;k<mu;k++)
     {
-        u_hat[k] = U[max+k*S_dims[0]];
+        u_hat[k] = U[max+k*n_states];
     }
     
     mxFree(m);
