@@ -33,23 +33,27 @@ s = pamap(y);
 Eb_N0_min = 0;
 Eb_N0_max = 11;
 Eb_N0_dB = Eb_N0_min:Eb_N0_max;
-snr_dB = Eb_N0_dB + 10*log10(2);
-Ec_N0_dB = Eb_N0_dB - 10*log10(2);
+%snr_dB = Eb_N0_dB + 10*log10(2);
+
 errors = zeros(1,Eb_N0_max-Eb_N0_min);
-%errors2 = zeros(1,Eb_N0_max-Eb_N0_min);
+
+x = 50; e =zeros(1,x);
 
 for i=1:Eb_N0_max-Eb_N0_min+1
-
-    %r = awgn(s,snr_dB(i),'measured');
-    n = 1/sqrt(2)*[randn(size(s)) + 1i*randn(size(s))]; % white gaussian noise, 0dB variance
-    r = real(s + 10^(-Ec_N0_dB(i)/20)*n); % additive white gaussian noise
     
-    % viterbi decoding
-    uhat = cbinconvdec(r.',SS.',OO.',NN.');
- %   uhat2 = binconvdec(r,SS,OO,NN);
+    for j=1:x
+        
+        r = awgn(s,Eb_N0_dB(i),'measured');
+    
+        % viterbi decoding
+        uhat = cbinconvdec(r.',SS.',OO.',NN.');
+%         uhat = binconvdec(r,SS,OO,NN);
 
-    errors(i) = sum(u~=uhat)/mu;
-  %  errors2(i) = sum(u~=uhat2)/mu;
+        e(j) = sum(u~=uhat);
+        
+    end
+    errors(i) = sum(e)/(mu*x);
+
     
     fprintf('%d',i);
 end
