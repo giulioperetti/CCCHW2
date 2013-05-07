@@ -45,7 +45,7 @@ for i=1:Eb_N0_max-Eb_N0_min+1
     r = real(s + 10^(-Ec_N0_dB(i)/20)*n); % additive white gaussian noise
     
     % viterbi decoding
-    uhat = cbinconvdec(r,SS,OO,NN);
+    uhat = cbinconvdec(r.',SS.',OO.',NN.');
  %   uhat2 = binconvdec(r,SS,OO,NN);
 
     errors(i) = sum(u~=uhat)/mu;
