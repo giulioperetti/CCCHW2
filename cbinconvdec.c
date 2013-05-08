@@ -23,13 +23,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nlhs != 1)
         mexErrMsgTxt("One output argument required");
     
-    // declare variables
+    // variables declaration
     mxArray *r_in_m, *S_in_m, *O_in_m, *N_in_m, *u_hat_out_m;
     const mwSize *r_dims, *S_dims, *O_dims, *N_dims, *u_hat_dims;
     double **r, *rmem, *u_hat, **S, *Smem, **O, *Omem, **N, *Nmem, *m, *C, *C_aux, **U, *Umem, **U_aux, *U_auxmem;
     int *p, t, max, mu, nu, n_states, i, j, k;
     
-    // associate inputs
+    // inputs association
     r_in_m = mxDuplicateArray(prhs[0]);
     S_in_m = mxDuplicateArray(prhs[1]);
     O_in_m = mxDuplicateArray(prhs[2]);
@@ -37,35 +37,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     // dimensions check
     for (i=0;i<4;i++)
-    {
         if (mxGetNumberOfDimensions(prhs[i]) != 2)
             mexErrMsgTxt("Only 2 dimensions input matrices allowed");
-    }
     
-    r_dims = mxGetDimensions(prhs[0]);
-   
+    r_dims = mxGetDimensions(prhs[0]);  
     S_dims = mxGetDimensions(prhs[1]);
     O_dims = mxGetDimensions(prhs[2]);
     N_dims = mxGetDimensions(prhs[3]);
-//      if (N_dims[1] != 2)
-//          mexErrMsgTxt("The fourth input argument must have 2 columns");
+    if (r_dims[1] != 2)
+        mexErrMsgTxt("The first input argument must have 2 columns");
+    if (S_dims[0] != 2)
+        mexErrMsgTxt("The fourth input argument must have 2 rows");
+    if (O_dims[0] != 2)
+        mexErrMsgTxt("The fourth input argument must have 2 rows");
+    if (N_dims[0] != 2)
+        mexErrMsgTxt("The fourth input argument must have 2 rows");
     
-    mu = (int)r_dims[0]; // input length
-    n_states = S_dims[1]; // number of states
-    nu = (int)ceil(log(n_states)/log(2)); // system memory 
+    // input length, number of states, system memory
+    mu = (int)r_dims[0]; 
+    n_states = S_dims[1]; 
+    nu = (int)ceil(log(n_states)/log(2)); 
     
-    
-    // associate outputs
+    // outputs association
     u_hat_out_m = plhs[0] = mxCreateDoubleMatrix(1,mu,mxREAL);
     
-    // associate pointers
+    // pointers association and allocation
     rmem = mxGetPr(r_in_m);
     r = mxCalloc(2, sizeof(double));
     r[0] = &rmem[0];
     r[1] = &rmem[mu];
-    
-//     stamp(r,2,4);
-    
+        
     u_hat = mxGetPr(u_hat_out_m);
     
     Smem = mxGetPr(S_in_m);
@@ -78,20 +79,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         S[i] = &Smem[i*2];
         O[i] = &Omem[i*2];
-        N[i] = &Nmem[i*2];
-        
+        N[i] = &Nmem[i*2];       
     } 
     
-    /*
-    stamp(N,4,2);
-    mexPrintf("\n");
-    stamp(O,4,2);mexPrintf("\n");
-    stamp(S,4,2);
-    */
-    
-    // VITERBI DECODING 
+    // VITERBI DECODER
       
-    // cost vectors initialization
+    // cost vectors association and allocation
     C = mxCalloc(n_states, sizeof(double)); 
     C_aux = mxCalloc(n_states, sizeof(double)); 
     
@@ -103,19 +96,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     C[0] = 0;
      
-    // survivors matrix initialization
+    // survivors matrix association and allocation
     Umem = mxCalloc(n_states*mu, sizeof(double));
     U = mxCalloc(n_states, sizeof(double));
-    U_auxmem = mxCalloc(n_states*(10*nu), sizeof(double));
+    U_auxmem = mxCalloc(n_states*(15*nu), sizeof(double));
     U_aux = mxCalloc(n_states, sizeof(double));
     
     for (i=0;i<n_states;i++)
     {
         U[i] = &Umem[i*mu];
-        U_aux[i] = &U_auxmem[i*10*nu];
+        U_aux[i] = &U_auxmem[i*15*nu];
     }
     
-    // state and auxiliary variables initialization
+    // auxiliary variables association and allocation
     p = mxCalloc(2,sizeof(int));
     m = mxCalloc(2,sizeof(double));
     
@@ -123,19 +116,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // Viterbi algorithm
     for (i=0;i<mu;i++)
     {
-//      mexPrintf("-------------------------- SYMBOL %d:\n",i);
         for (j=0;j<n_states;j++)
         {  
-//             mexPrintf(" State %d:\n",j);
             // predecessors
             p[0] = (int)N[j][0];
             p[1] = (int)N[j][1];
-            
-//             mexPrintf("p = [%d,%d]\n",p[0],p[1]);
-            
-            // transitions    
+                        
+            // transition   
             t = floor(j/2);
-//             mexPrintf("t = %d\n",t);
             
             // paths metric
             m[0] = C[p[0]] + r[0][i]*pamap(floor(O[p[0]][t]/2))
@@ -143,41 +131,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             m[1] = C[p[1]] + r[0][i]*pamap(floor(O[p[1]][t]/2))
                            + r[1][i]*pamap(floor((int)O[p[1]][t]%2));
-            
-//             mexPrintf("r[0][i] = %f; r[1][i] = %f\n",r[0][i],r[1][i]);
-            
-//             mexPrintf("m = [%d,%d] = %d+%d+%d\n",m[0],m[1],C[p[0]],(int)r[0][i]*pamap(floor(O[p[0]][t]/2)),r[1][i]*pamap(floor((int)O[p[0]][t]%2)));
+                        
             // maximum metric selection
             if (m[0] > m[1])
                 max = 0;
             else max = 1;
-                     
-                      
-//             mexPrintf("p[max] = %d;t = %d\n",p[max],t);
-            // path and cost update
+
+            // (auxiliary) path and cost update
             C_aux[j] = m[max];
 
-//             stamp(U_aux,4,10);
-//             mexPrintf("\n");
+            for (k=0;k<min(i,15*nu);k++)
+                U_aux[j][k] = U[p[max]][i-min(i,15*nu-1)+k];
             
-            for (k=0;k<min(i,10*nu);k++)
-            {
-                U_aux[j][k] = U[p[max]][i-min(i,10*nu-1)+k];
-//                 mexPrintf("U_aux[%d][%d] = U[%d][%d] = %d; ",j,k,p[max],i-min(i,10*nu-1)+k,(int)U[p[max]][i-min(i,10*nu-1)+k]);
-            }
-            /*
-            mexPrintf("\n");           
-            stamp(U_aux,4,10);
-            mexPrintf("\n");
-            */
-            U_aux[j][min(i,10*nu-1)] = t;
-            /*
-            stamp(U_aux,4,10);
-            mexPrintf("\n");
-            */
+            U_aux[j][min(i,15*nu-1)] = t;
         }
-        
-        
         
         // path and cost update
         max = C_aux[0];
@@ -189,12 +156,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         for (k=0;k<n_states;k++)
             C[k] = C_aux[k] - max;
         
-        for (k=0;k<min(i+1,10*nu);k++)
+        for (k=0;k<min(i+1,15*nu);k++)
             for (j=0;j<n_states;j++)
-                U[j][max(0,i-10*nu+1)+k] = U_aux[j][k];        
+                U[j][max(0,i-15*nu+1)+k] = U_aux[j][k];        
          
     }
     
+    // winner path selection
     max = 0;
     for (k=1;k<n_states;k++)
     {
@@ -202,12 +170,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 max = k; 
     }
     
+    // output 
     for (k=0;k<mu;k++)
     {
         u_hat[k] = U[max][k];
     }
     
-    
+    // disallocation
     mxFree(m);
     mxFree(p);
     mxFree(C);
@@ -218,24 +187,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree(U_auxmem);
     
     return;
- }
-
-
-
-void stamp(double **M,int r, int c)
-{
-    int i,j;
-    for (i=0;i<r;i++)
-    {
-        for (j=0;j<c;j++)
-        {
-            mexPrintf("%d ",(int)M[i][j]);
-        }
-        mexPrintf("\n");
-    }
 }
 
 int pamap(int x)
 {
+    // pam map: 0 -> -1 ; 1 -> 1
     return 2*x-1;
 }

@@ -1,6 +1,4 @@
 function [u] = binconvdec(r,S,O,N)
-%BINCONVDEC Viterbi decoder
-%   Detailed explanation goes here
 
     mu = length(r(1,:));
     nu = log(length(S(:,1)))/log(2);
